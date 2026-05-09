@@ -7,7 +7,14 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data: { session } } = await supabase.auth.exchangeCodeForSession(code)
+    if (session?.user) {
+      await supabase.from('profiles').upsert({
+        id: session.user.id,
+        display_name: session.user.user_metadata?.full_name ?? 'Mover',
+        avatar_url: session.user.user_metadata?.avatar_url ?? null,
+      }, { onConflict: 'id', ignoreDuplicates: true })
+    }
   }
 
   return NextResponse.redirect(`${origin}/home`)
