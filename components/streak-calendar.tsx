@@ -7,7 +7,6 @@ interface Props {
 export default function StreakCalendar({ streakDays, currentStreak, bestStreak }: Props) {
   const dayMap = new Map(streakDays.map(d => [d.date, d.minutes_logged]))
 
-  // Last 91 days (13 weeks)
   const today = new Date()
   const days = Array.from({ length: 91 }, (_, i) => {
     const d = new Date(today)
@@ -15,7 +14,6 @@ export default function StreakCalendar({ streakDays, currentStreak, bestStreak }
     return d.toISOString().split('T')[0]
   })
 
-  // Week labels (Mon-Sun)
   const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
   return (
