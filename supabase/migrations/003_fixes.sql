@@ -1,5 +1,17 @@
--- log_activity: atomic transaction for a single activity submission.
--- Writes activity, updates streak_days, recalculates XP+level, updates profile.
+-- Allow users to insert their own profile row (needed for callback upsert)
+create policy "profiles_insert_own" on public.profiles
+  for insert with check (auth.uid() = id);
+
+-- Backfill profiles for users who signed in before the trigger was applied
+insert into public.profiles (id, display_name, avatar_url)
+select
+  id,
+  coalesce(raw_user_meta_data->>'full_name', 'Mover'),
+  raw_user_meta_data->>'avatar_url'
+from auth.users
+on conflict (id) do nothing;
+
+-- Fix log_activity: SELECT INTO returns NULL (not 0) when no row is found
 create or replace function public.log_activity(
   p_user_id          uuid,
   p_type             text,
@@ -41,7 +53,6 @@ begin
   values (p_user_id, v_today, v_new_minutes)
   on conflict (user_id, date) do update set minutes_logged = excluded.minutes_logged;
 
-  -- Recalculate streak only when crossing the 30-min threshold for the first time today
   v_new_streak := v_profile.current_streak;
   if v_new_minutes >= 30 and v_prev_minutes < 30 then
     select coalesce(minutes_logged, 0) into v_yesterday_min
@@ -55,13 +66,11 @@ begin
     end if;
   end if;
 
-  -- XP: 1/min for first 30, streak-multiplied for each bonus minute
   v_base_mins  := least(p_duration_minutes, 30);
   v_bonus_mins := greatest(0, p_duration_minutes - 30);
   v_multiplier := 1.0 + 0.05 * v_profile.current_streak;
   v_earned_xp  := v_base_mins + round(v_bonus_mins * v_multiplier)::int;
 
-  -- Level-up loop
   v_new_xp    := v_profile.xp + v_earned_xp;
   v_new_level := v_profile.level;
   loop
