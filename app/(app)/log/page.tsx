@@ -23,7 +23,6 @@ export default async function LogPage() {
     })
   )
 
-  // Group by date
   const grouped: Record<string, typeof activitiesWithUrls> = {}
   for (const item of activitiesWithUrls) {
     const date = new Date(item.activity.logged_at).toISOString().split('T')[0]
