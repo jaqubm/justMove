@@ -231,9 +231,6 @@ export default async function ProfilePage() {
           )}
           {/* Name + edit */}
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--ink)', marginBottom: 4 }}>
-              {profile.display_name ?? 'Mover'}
-            </div>
             <EditNameForm currentName={profile.display_name ?? ''} />
           </div>
           {/* Rank badge + XP bar */}
