@@ -1,7 +1,7 @@
 'use client'
 import { createClient } from '@/lib/supabase/client'
 
-export default function SignInButton() {
+export default function SignInButton({ inline }: { inline?: boolean }) {
   async function handleSignIn() {
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
@@ -14,7 +14,9 @@ export default function SignInButton() {
     <button
       onClick={handleSignIn}
       style={{
-        width: '100%', height: 60, borderRadius: 9999,
+        width: inline ? 'auto' : '100%',
+        height: 60, borderRadius: 9999,
+        padding: inline ? '0 32px' : undefined,
         background: 'var(--ink)', color: 'var(--bg)', border: 'none',
         fontSize: 16, fontWeight: 600, fontFamily: 'inherit',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
