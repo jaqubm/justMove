@@ -53,8 +53,8 @@ export default async function ProfilePage() {
     redirect('/')
   }
 
-  return (
-    <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 16px 0' }}>
+  return (<>
+    <div className="md:hidden" style={{ maxWidth: 560, margin: '0 auto', padding: '24px 16px 0' }}>
 
       {/* Header card */}
       <div style={{
@@ -207,5 +207,97 @@ export default async function ProfilePage() {
         </form>
       </div>
     </div>
-  )
+
+    {/* ── Desktop ── */}
+    <div className="hidden md:block" style={{ padding: '28px 36px', maxWidth: 1100, margin: '0 auto' }}>
+
+      {/* Header card */}
+      <div style={{
+        background: 'linear-gradient(160deg, oklch(0.34 0.06 90), var(--surface))',
+        borderRadius: 22, padding: '28px 32px', marginBottom: 20,
+        border: '1px solid var(--line)', position: 'relative',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          {/* Avatar 96px */}
+          {profile.avatar_url ? (
+            <Image src={profile.avatar_url} alt={profile.display_name ?? 'avatar'}
+              width={96} height={96} style={{ borderRadius: '50%', flexShrink: 0 }} />
+          ) : (
+            <div style={{
+              width: 96, height: 96, borderRadius: '50%', background: 'var(--surface2)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 800, color: 'var(--ink-muted)',
+            }}>{(profile.display_name?.[0] ?? 'M').toUpperCase()}</div>
+          )}
+          {/* Name + edit */}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--ink)', marginBottom: 4 }}>
+              {profile.display_name ?? 'Mover'}
+            </div>
+            <EditNameForm currentName={profile.display_name ?? ''} />
+          </div>
+          {/* Rank badge + XP bar */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
+            <RankBadge level={profile.level} size="lg" />
+            <div style={{ width: 200 }}>
+              <XPBar xp={profile.xp} level={profile.level} />
+            </div>
+          </div>
+          {/* Sign out */}
+          <form action={signOut}>
+            <button type="submit" style={{
+              height: 36, padding: '0 16px', borderRadius: 10,
+              background: 'transparent', border: '1px solid var(--line)',
+              color: 'var(--ink-muted)', fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              fontFamily: 'inherit', flexShrink: 0,
+            }}>Sign out</button>
+          </form>
+        </div>
+      </div>
+
+      {/* 4-col stat grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+        {[
+          { val: activityCount ?? 0, lab: 'Activities' },
+          { val: `${profile.best_streak}d`, lab: 'Best streak' },
+          { val: Math.round((profile.total_minutes ?? 0) / 60), lab: 'Hours moved' },
+          { val: profile.level, lab: 'Level' },
+        ].map(s => (
+          <div key={s.lab} style={{
+            background: 'var(--surface)', border: '1px solid var(--line)',
+            borderRadius: 16, padding: '16px 18px', textAlign: 'center',
+          }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: 'var(--ink)', lineHeight: 1, letterSpacing: '-0.03em' }}>{s.val}</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 6 }}>{s.lab}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Achievements — 6-col grid */}
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, padding: '20px 22px' }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>Achievements</div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
+          {ACHIEVEMENTS.map(a => (
+            <div key={a.name} style={{
+              background: a.unlocked ? 'var(--surface2)' : 'transparent',
+              border: `1px solid ${a.unlocked ? 'var(--line)' : 'var(--line-soft)'}`,
+              borderRadius: 14, padding: '12px 8px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+              opacity: a.unlocked ? 1 : 0.4,
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: a.unlocked ? 'color-mix(in srgb, var(--accent) 16%, transparent)' : 'var(--surface2)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: a.unlocked ? 'var(--accent)' : 'var(--ink-dim)',
+              }}>
+                <AchievementIcon name={a.icon} />
+              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--ink-muted)', textAlign: 'center', lineHeight: 1.3 }}>{a.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </>)
 }
