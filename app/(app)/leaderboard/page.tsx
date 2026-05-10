@@ -1,7 +1,14 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import RankBadge from '@/components/rank-badge'
 import Image from 'next/image'
+
+const TABS = [
+  { key: 'streak',  label: 'Streak'  },
+  { key: 'xp',     label: 'XP'      },
+  { key: 'minutes', label: 'Minutes' },
+]
+
+const PODIUM_HEIGHTS: Record<number, number> = { 1: 130, 2: 105, 3: 95 }
 
 export default async function LeaderboardPage({
   searchParams,
@@ -9,93 +16,173 @@ export default async function LeaderboardPage({
   searchParams: Promise<{ sort?: string }>
 }) {
   const { sort = 'streak' } = await searchParams
-
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/')
 
-  const sortColumn = sort === 'xp' ? 'xp' : 'current_streak'
+  const sortColumn = sort === 'xp' ? 'xp'
+    : sort === 'minutes' ? 'total_minutes'
+    : 'current_streak'
 
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, display_name, avatar_url, level, xp, current_streak')
+    .select('id, display_name, avatar_url, level, xp, current_streak, total_minutes')
     .order(sortColumn, { ascending: false })
     .limit(50)
 
-  return (
-    <div className="max-w-xl mx-auto px-4 py-6 space-y-5">
-      <h1 className="font-display text-2xl font-bold text-ink">Leaderboard</h1>
+  const top3 = (profiles ?? []).slice(0, 3)
+  const rest = (profiles ?? []).slice(3)
 
-      {/* Sort toggle */}
-      <div className="flex gap-2">
-        {[
-          { key: 'streak', label: '🔥 Streak' },
-          { key: 'xp',     label: '⭐ XP' },
-        ].map(tab => (
+  function getValue(p: { xp: number; total_minutes: number; current_streak: number }) {
+    if (sort === 'xp')      return `${p.xp.toLocaleString()} XP`
+    if (sort === 'minutes') return `${p.total_minutes.toLocaleString()}m`
+    return `${p.current_streak}d`
+  }
+
+  // Podium order: 2nd left, 1st center, 3rd right
+  const podium = top3.length >= 3
+    ? [{ ...top3[1], place: 2 }, { ...top3[0], place: 1 }, { ...top3[2], place: 3 }]
+    : top3.map((p, i) => ({ ...p, place: i + 1 }))
+
+  return (
+    <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 16px 0' }}>
+      {/* Header */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{
+          fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 800,
+          letterSpacing: '-0.03em', color: 'var(--ink)',
+        }}>Friends</div>
+        <div style={{
+          fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)',
+          textTransform: 'uppercase', letterSpacing: '0.06em',
+        }}>weekly streak board</div>
+      </div>
+
+      {/* Segmented control */}
+      <div style={{
+        display: 'flex', background: 'var(--surface)', borderRadius: 12,
+        padding: 4, marginBottom: 18, border: '1px solid var(--line)',
+      }}>
+        {TABS.map(tab => (
           <a
             key={tab.key}
             href={`/leaderboard?sort=${tab.key}`}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-              sort === tab.key
-                ? 'text-accent-ink'
-                : 'text-ink-muted bg-surface border border-line hover:text-ink'
-            }`}
-            style={sort === tab.key ? { backgroundColor: 'var(--accent)' } : undefined}
-          >
-            {tab.label}
-          </a>
+            style={{
+              flex: 1, padding: '8px 0', borderRadius: 9, textAlign: 'center',
+              background: sort === tab.key ? 'var(--bg)' : 'transparent',
+              color: sort === tab.key ? 'var(--ink)' : 'var(--ink-dim)',
+              fontSize: 13, fontWeight: 600, textDecoration: 'none', fontFamily: 'inherit',
+            }}
+          >{tab.label}</a>
         ))}
       </div>
 
-      {/* Entries */}
-      <div className="space-y-2">
-        {(profiles ?? []).map((profile, idx) => {
-          const isMe = profile.id === user.id
-          const value = sort === 'xp'
-            ? `${profile.xp.toLocaleString()} XP`
-            : `${profile.current_streak}d 🔥`
-
-          return (
-            <div
-              key={profile.id}
-              className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                isMe
-                  ? 'border-accent bg-accent/5'
-                  : 'border-line bg-surface'
-              }`}
-            >
-              <span className="font-mono text-sm text-ink-dim w-6 text-right flex-shrink-0">
-                {idx + 1}
-              </span>
-              {profile.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={profile.display_name}
-                  width={36}
-                  height={36}
-                  className="rounded-full flex-shrink-0"
-                />
+      {/* Podium */}
+      {podium.length >= 3 && (
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1.2fr 1fr',
+          gap: 8, marginBottom: 18, alignItems: 'flex-end',
+        }}>
+          {podium.map(p => (
+            <div key={p.id} style={{ textAlign: 'center' }}>
+              {p.avatar_url ? (
+                <Image src={p.avatar_url} alt={p.display_name}
+                  width={48} height={48}
+                  style={{ borderRadius: '50%', margin: '0 auto' }} />
               ) : (
-                <div className="w-9 h-9 rounded-full bg-surface2 flex items-center justify-center text-sm font-bold text-ink flex-shrink-0">
-                  {profile.display_name[0].toUpperCase()}
-                </div>
+                <div style={{
+                  width: 48, height: 48, borderRadius: '50%', background: 'var(--surface2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto',
+                  fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 20, color: 'var(--ink)',
+                }}>{(p.display_name?.[0] ?? '?').toUpperCase()}</div>
               )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-ink truncate">
-                  {profile.display_name}
-                  {isMe && <span className="ml-1.5 text-xs text-ink-dim">(you)</span>}
-                </p>
-                <div className="mt-0.5">
-                  <RankBadge level={profile.level} size="sm" />
+              <div style={{
+                fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700,
+                marginTop: 8, color: 'var(--ink)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>{p.display_name}</div>
+              <div style={{
+                fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--flame)',
+                fontWeight: 700, marginBottom: 8,
+              }}>{getValue(p)}</div>
+              <div style={{
+                height: PODIUM_HEIGHTS[p.place],
+                background: p.place === 1 ? 'var(--accent)' : 'var(--surface)',
+                borderRadius: '14px 14px 0 0',
+                border: p.place === 1 ? 'none' : '1px solid var(--line)',
+                color: p.place === 1 ? 'var(--accent-ink)' : 'var(--ink)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-display)', fontSize: 36, fontWeight: 800, letterSpacing: '-0.04em',
+              }}>{p.place}</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* List: 4th onward */}
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--line)',
+        borderRadius: 18, overflow: 'hidden',
+      }}>
+        {rest.length === 0 && (
+          <p style={{
+            fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)',
+            textAlign: 'center', padding: '24px 0', textTransform: 'uppercase', letterSpacing: '0.06em',
+          }}>Only {top3.length} {top3.length === 1 ? 'player' : 'players'} so far</p>
+        )}
+        {rest.map((p, i) => {
+          const isMe = p.id === user.id
+          return (
+            <div key={p.id} style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '14px 16px',
+              borderBottom: i === rest.length - 1 ? 'none' : '1px solid var(--line-soft)',
+              background: isMe
+                ? 'color-mix(in srgb, var(--accent) 8%, transparent)'
+                : 'transparent',
+              outline: isMe ? '1px solid var(--accent)' : 'none',
+              outlineOffset: -1,
+            }}>
+              <span style={{
+                fontFamily: 'var(--font-mono)', width: 22, fontSize: 13,
+                color: 'var(--ink-dim)', fontWeight: 700, textAlign: 'right', flexShrink: 0,
+              }}>{i + 4}</span>
+              {p.avatar_url ? (
+                <Image src={p.avatar_url} alt={p.display_name}
+                  width={36} height={36}
+                  style={{
+                    borderRadius: '50%', flexShrink: 0,
+                    outline: isMe ? '2px solid var(--accent)' : 'none', outlineOffset: 2,
+                  }} />
+              ) : (
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', background: 'var(--surface2)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15, color: 'var(--ink)',
+                }}>{(p.display_name?.[0] ?? '?').toUpperCase()}</div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>
+                  {p.display_name}
+                  {isMe && <span style={{ color: 'var(--accent)', fontSize: 11, marginLeft: 6 }}>· you</span>}
+                </div>
+                <div style={{
+                  fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--ink-dim)',
+                  textTransform: 'uppercase', letterSpacing: '0.06em', marginTop: 2,
+                }}>
+                  LV {p.level} · {p.xp.toLocaleString()} XP
                 </div>
               </div>
-              <span className="font-mono text-sm font-semibold text-ink flex-shrink-0">
-                {value}
-              </span>
+              <div style={{
+                fontFamily: 'var(--font-mono)', fontSize: 13,
+                color: 'var(--flame)', fontWeight: 700, flexShrink: 0,
+              }}>{getValue(p)}</div>
             </div>
           )
         })}
       </div>
+
+      <div style={{ height: 24 }} />
     </div>
   )
 }
