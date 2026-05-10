@@ -148,6 +148,7 @@ export default function Nav() {
               )
             }
             const active = pathname === tab.href
+            if (!('Icon' in tab)) return null
             const Icon = tab.Icon as React.ComponentType<{ active: boolean }>
             return (
               <Link

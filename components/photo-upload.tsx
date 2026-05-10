@@ -81,24 +81,43 @@ export default function PhotoUpload({ onUpload }: Props) {
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
-          className="w-full h-44 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 transition-colors disabled:opacity-50"
-          style={{ borderColor: 'var(--line)', color: 'var(--ink-dim)' }}
+          style={{
+            width: '100%', height: 220, borderRadius: 18, border: 'none',
+            background: 'linear-gradient(180deg, oklch(0.32 0.05 16), oklch(0.18 0.04 16))',
+            backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,.04) 0 12px, transparent 12px 24px)',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: 10, cursor: 'pointer', position: 'relative',
+            opacity: uploading ? 0.5 : 1,
+          }}
         >
           {uploading ? (
-            <span className="text-sm">Uploading…</span>
+            <span style={{ fontSize: 14, color: 'var(--ink-dim)' }}>Uploading…</span>
           ) : (
             <>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-              </svg>
-              <span className="text-sm font-medium">Upload proof photo</span>
-              <span className="text-xs opacity-60">JPEG · PNG · WEBP · max 5 MB</span>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%',
+                background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid rgba(255,255,255,0.18)',
+              }}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+                  stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="6.5" width="18" height="13" rx="2.4"/>
+                  <circle cx="12" cy="13" r="3.6"/>
+                  <path d="M9 6.5l1.5-2h3L15 6.5"/>
+                </svg>
+              </div>
+              <span style={{ fontSize: 14, color: '#fff', opacity: 0.95 }}>Take photo</span>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: 10,
+                color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.06em',
+              }}>or pick from camera roll</span>
             </>
           )}
         </button>
       )}
 
-      {error && <p className="text-xs" style={{ color: '#ef4444' }}>{error}</p>}
+      {error && <p className="text-xs" style={{ color: 'var(--danger)' }}>{error}</p>}
     </div>
   )
 }

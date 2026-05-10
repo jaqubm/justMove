@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen" style={{ backgroundColor: 'var(--bg)' }}>
       <Nav />
-      <main className="md:pl-60 pb-20 md:pb-0 min-h-screen">
+      <main className="md:pl-60 pb-32 md:pb-0 min-h-screen">
         {children}
       </main>
     </div>

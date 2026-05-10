@@ -7,21 +7,27 @@ interface Props {
 
 export default function XPBar({ level, xp }: Props) {
   const needed = xpToNextLevel(level)
-  const pct = Math.min(100, (xp / needed) * 100)
+  const pct    = Math.min(100, (xp / needed) * 100)
 
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between items-baseline">
-        <span className="font-mono text-xs" style={{ color: 'var(--ink-dim)' }}>
-          {xp.toLocaleString()} / {needed.toLocaleString()} XP
+    <div>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8,
+      }}>
+        <span style={{
+          fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--ink)',
+        }}>
+          Level <span style={{ color: 'var(--accent)' }}>{level}</span>
         </span>
-        <span className="font-mono text-xs" style={{ color: 'var(--ink-muted)' }}>Lv {level}</span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)' }}>
+          {xp.toLocaleString()}<span style={{ opacity: 0.5 }}> / {needed.toLocaleString()} xp</span>
+        </span>
       </div>
-      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--surface2)' }}>
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: 'var(--accent)' }}
-        />
+      <div style={{ height: 8, background: 'var(--surface2)', borderRadius: 999, overflow: 'hidden' }}>
+        <div style={{
+          width: `${pct}%`, height: '100%',
+          background: 'var(--accent)', borderRadius: 999, transition: 'width 0.5s ease',
+        }} />
       </div>
     </div>
   )
