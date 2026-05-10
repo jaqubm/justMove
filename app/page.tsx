@@ -71,9 +71,9 @@ export default async function SignInPage() {
             </div>
             <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, color: 'var(--ink-dim)' }}>By continuing you agree to</span>
-              <span style={{ fontSize: 12, color: 'var(--ink)', textDecoration: 'underline', textUnderlineOffset: 2 }}>terms</span>
+              <a href="#" style={{ fontSize: 12, color: 'var(--ink)', textDecoration: 'underline', textUnderlineOffset: 2 }}>terms</a>
               <span style={{ fontSize: 12, color: 'var(--ink-dim)' }}>·</span>
-              <span style={{ fontSize: 12, color: 'var(--ink)', textDecoration: 'underline', textUnderlineOffset: 2 }}>privacy</span>
+              <a href="#" style={{ fontSize: 12, color: 'var(--ink)', textDecoration: 'underline', textUnderlineOffset: 2 }}>privacy</a>
             </div>
           </div>
         </main>
@@ -148,7 +148,7 @@ export default async function SignInPage() {
         </div>
 
         {/* Right panel — decorative */}
-        <div style={{
+        <div aria-hidden="true" style={{
           flex: '0.9', position: 'relative', overflow: 'hidden',
           background: 'linear-gradient(160deg, oklch(0.26 0.06 90) 0%, var(--bg) 100%)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
