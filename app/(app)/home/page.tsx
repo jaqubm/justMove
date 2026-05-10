@@ -399,7 +399,12 @@ export default async function HomePage() {
                   <div style={{
                     fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700,
                     color: 'var(--flame)', flexShrink: 0,
-                  }}>{f.current_streak}🔥</div>
+                  }}>
+                    <span aria-label={`${f.current_streak} day streak`}>
+                      {f.current_streak}
+                      <span aria-hidden="true">🔥</span>
+                    </span>
+                  </div>
                 </div>
               ))}
               {(friends ?? []).length === 0 && (
