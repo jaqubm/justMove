@@ -45,7 +45,8 @@ export default async function LeaderboardPage({
     : top3.map((p, i) => ({ ...p, place: i + 1 }))
 
   return (
-    <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 16px 0' }}>
+    <>
+    <div className="md:hidden" style={{ maxWidth: 560, margin: '0 auto', padding: '24px 16px 0' }}>
       {/* Header */}
       <div style={{ marginBottom: 14 }}>
         <div style={{
@@ -184,5 +185,144 @@ export default async function LeaderboardPage({
 
       <div style={{ height: 24 }} />
     </div>
+
+    {/* ── Desktop ── */}
+    <div className="hidden md:block" style={{ padding: '28px 36px', maxWidth: 1100, margin: '0 auto' }}>
+
+      {/* Header with tab switcher */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 22 }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--ink)' }}>Friends</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--ink-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>weekly board</div>
+        </div>
+        {/* Tab switcher */}
+        <div style={{
+          display: 'flex', background: 'var(--surface)', border: '1px solid var(--line)',
+          borderRadius: 12, padding: 4, gap: 2,
+        }}>
+          {TABS.map(tab => (
+            <a key={tab.key} href={`?sort=${tab.key}`} style={{
+              height: 36, padding: '0 18px', borderRadius: 9,
+              background: sort === tab.key ? 'var(--ink)' : 'transparent',
+              color: sort === tab.key ? 'var(--bg)' : 'var(--ink-muted)',
+              fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', cursor: 'pointer', textDecoration: 'none',
+            }}>{tab.label}</a>
+          ))}
+        </div>
+      </div>
+
+      {/* Gradient podium card */}
+      {top3.length >= 3 && (
+        <div style={{
+          background: 'oklch(0.22 0.05 90)',
+          borderRadius: 22, padding: '32px 40px 0', marginBottom: 20,
+          border: '1px solid var(--line)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 16,
+        }}>
+          {podium.map(p => {
+            const colHeight = p.place === 1 ? 200 : p.place === 2 ? 160 : 130
+            const isMe = p.id === user.id
+            return (
+              <div key={p.id} style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+                width: 140,
+              }}>
+                {/* Avatar */}
+                {p.avatar_url ? (
+                  <Image src={p.avatar_url} alt={p.display_name ?? 'avatar'} width={56} height={56}
+                    style={{ borderRadius: '50%', border: isMe ? '3px solid var(--accent)' : '2px solid var(--line)' }} />
+                ) : (
+                  <div style={{
+                    width: 56, height: 56, borderRadius: '50%', background: 'var(--surface2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ink-muted)',
+                    border: isMe ? '3px solid var(--accent)' : '2px solid var(--line)',
+                  }}>{(p.display_name?.[0] ?? '?').toUpperCase()}</div>
+                )}
+                {/* Name */}
+                <div style={{
+                  fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700,
+                  color: isMe ? 'var(--accent)' : 'var(--ink)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  maxWidth: 130, textAlign: 'center',
+                }}>{isMe ? 'You' : (p.display_name ?? 'Mover')}</div>
+                {/* Value */}
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>
+                  {getValue(p)}
+                </div>
+                {/* Podium column */}
+                <div style={{
+                  width: '100%', height: colHeight, borderRadius: '10px 10px 0 0',
+                  background: p.place === 1
+                    ? 'linear-gradient(180deg, color-mix(in srgb, var(--accent) 40%, transparent), color-mix(in srgb, var(--accent) 12%, transparent))'
+                    : 'color-mix(in srgb, var(--accent) 8%, var(--surface))',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <div style={{
+                    fontFamily: 'var(--font-display)', fontSize: p.place === 1 ? 40 : 28, fontWeight: 800,
+                    color: p.place === 1 ? 'var(--accent)' : 'var(--ink-dim)',
+                  }}>{p.place === 1 ? '🏆' : `#${p.place}`}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Full ranked table */}
+      <div style={{
+        background: 'var(--surface)', border: '1px solid var(--line)', borderRadius: 18, overflow: 'hidden',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '48px 1fr 100px 80px 100px',
+          padding: '10px 16px', borderBottom: '1px solid var(--line)',
+          fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--ink-dim)',
+          textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700,
+        }}>
+          <span>Rank</span>
+          <span>Friend</span>
+          <span>Streak</span>
+          <span>Level</span>
+          <span>XP</span>
+        </div>
+        {/* Rows */}
+        {(profiles ?? []).map((p, idx) => {
+          const isMe = p.id === user.id
+          return (
+            <div key={p.id} style={{
+              display: 'grid', gridTemplateColumns: '48px 1fr 100px 80px 100px',
+              padding: '10px 16px', alignItems: 'center',
+              background: isMe ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'transparent',
+              borderBottom: idx < (profiles ?? []).length - 1 ? '1px solid var(--line-soft)' : 'none',
+            }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: 'var(--ink-dim)' }}>#{idx + 1}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {p.avatar_url ? (
+                  <Image src={p.avatar_url} alt={p.display_name ?? 'avatar'} width={32} height={32}
+                    style={{ borderRadius: '50%', flexShrink: 0 }} />
+                ) : (
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%', background: 'var(--surface2)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ink-muted)',
+                  }}>{(p.display_name?.[0] ?? '?').toUpperCase()}</div>
+                )}
+                <span style={{
+                  fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: isMe ? 700 : 500,
+                  color: isMe ? 'var(--accent)' : 'var(--ink)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>{isMe ? 'You' : (p.display_name ?? 'Mover')}</span>
+              </div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: 'var(--flame)' }}>{p.current_streak}d</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--ink)' }}>Lv {p.level}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700, color: 'var(--accent)' }}>{p.xp.toLocaleString()}</div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+    </>
   )
 }
