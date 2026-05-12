@@ -1,7 +1,35 @@
 import '../global.css';
 
-import { Stack } from 'expo-router';
+import { useEffect } from 'react';
+import { Text, View } from 'react-native';
+import { Stack, useRouter, useSegments } from 'expo-router';
+
+import { useSession } from '../hooks/use-session';
 
 export default function RootLayout() {
-  return <Stack />;
+  const { session, loading } = useSession();
+  const router = useRouter();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (loading) return;
+
+    const inAuthGroup = segments[0] === '(auth)';
+
+    if (!session && !inAuthGroup) {
+      router.replace('/(auth)/sign-in');
+    } else if (session && inAuthGroup) {
+      router.replace('/');
+    }
+  }, [session, loading, segments, router]);
+
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-cream">
+        <Text className="text-3xl font-bold text-peach">justMove</Text>
+      </View>
+    );
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
